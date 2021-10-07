@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from 'react';
 import {
   AppState,
   StyleSheet,
   Text,
   View,
-  StatusBar,
   TouchableOpacity,
   Dimensions,
-} from "react-native";
-
-import moment from "moment";
-
-const screen = Dimensions.get("window");
+} from 'react-native';
+import moment from 'moment';
+import { getData, storeData } from './src/Utility/asyncStorage';
+const screen = Dimensions.get('window');
 
 const formatNumber = (number) => `0${number}`.slice(-2);
 
@@ -22,6 +20,9 @@ const getRemaining = (time) => {
 };
 
 export default function App() {
+  const appState = useRef(AppState.currentState);
+  const [appStateVisible, setAppStateVisible] = useState(appState.current);
+
   const [remainingSecs, setRemainingSecs] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const { mins, secs } = getRemaining(remainingSecs);
@@ -35,6 +36,7 @@ export default function App() {
     setIsActive(false);
   };
 
+  // timer useEffect
   useEffect(() => {
     let interval = null;
     if (isActive) {
@@ -47,14 +49,62 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isActive, remainingSecs]);
 
+  // app state to check app is in foreground or background
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        console.log('App has come to the foreground!');
+      }
+
+      appState.current = nextAppState;
+      setAppStateVisible(appState.current);
+      console.log('AppState', appState.current);
+      if (appState.current === 'active') {
+        readTime();
+      } else if (appState.current === 'background') {
+        saveTime();
+      }
+    });
+    return () => {
+      subscription?.remove();
+    };
+  });
+
+  //save data
+  const saveTime = async () => {
+    console.log('saving data');
+    await storeData(
+      {
+        timerTime: remainingSecs,
+        currentTime: getTime(),
+      },
+      'time'
+    );
+  };
+
+  // read data
+  const readTime = async () => {
+    const foregroundTime = getTime();
+    const data = await getData('time');
+    const updatedTime = foregroundTime - data.currentTime + data.timerTime;
+    setRemainingSecs(updatedTime);
+    setIsActive(true);
+  };
+
+  const getTime = () => {
+    const minute = moment().minute() * 60;
+    const seconds = moment().second();
+    return minute + seconds;
+  };
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-
-      <Text> current time= {moment.now}</Text>
       <Text style={styles.timerText}>{`${mins}:${secs}`}</Text>
       <TouchableOpacity onPress={toggle} style={styles.button}>
-        <Text style={styles.buttonText}>{isActive ? "Pause" : "Start"}</Text>
+        <Text style={styles.buttonText}>{isActive ? 'Pause' : 'Start'}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={reset}
@@ -69,33 +119,33 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#07121B",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#07121B',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   button: {
     borderWidth: 10,
-    borderColor: "#B9AAFF",
+    borderColor: '#B9AAFF',
     width: screen.width / 2,
     height: screen.width / 2,
     borderRadius: screen.width / 2,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
     fontSize: 45,
-    color: "#B9AAFF",
+    color: '#B9AAFF',
   },
   timerText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 90,
     marginBottom: 20,
   },
   buttonReset: {
     marginTop: 20,
-    borderColor: "#FF851B",
+    borderColor: '#FF851B',
   },
   buttonTextReset: {
-    color: "#FF851B",
+    color: '#FF851B',
   },
 });
