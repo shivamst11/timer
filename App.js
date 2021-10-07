@@ -9,6 +9,8 @@ import {
   Dimensions,
 } from "react-native";
 
+import moment from "moment";
+
 const screen = Dimensions.get("window");
 
 const formatNumber = (number) => `0${number}`.slice(-2);
@@ -48,6 +50,8 @@ export default function App() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
+
+      <Text> current time= {moment.now}</Text>
       <Text style={styles.timerText}>{`${mins}:${secs}`}</Text>
       <TouchableOpacity onPress={toggle} style={styles.button}>
         <Text style={styles.buttonText}>{isActive ? "Pause" : "Start"}</Text>
