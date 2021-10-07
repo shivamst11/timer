@@ -1,12 +1,51 @@
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
+
+const { height, width } = Dimensions.get('screen');
 
 export default function App() {
+  const RoundButton = ({ title, color, onPress }) => {
+    return (
+      <TouchableOpacity
+        style={{
+          borderColor: color,
+          height: width / 2,
+          width: width / 2,
+          borderRadius: width / 2,
+          borderWidth: 10,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 20,
+        }}
+      >
+        <Text style={{ fontSize: 45, color: color, fontWeight: 'bold' }}>
+          {title}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <Text
+        style={{
+          fontSize: 90,
+          color: 'white',
+          marginTop: 175,
+          marginBottom: 20,
+        }}
+      >
+        {'00'}:{'00'}
+      </Text>
+      <RoundButton title={'Start'} color={'violet'} />
+      <RoundButton title={'Reset'} color={'orange'} />
     </View>
   );
 }
@@ -14,8 +53,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'black',
     alignItems: 'center',
-    justifyContent: 'center',
   },
 });
